@@ -56,4 +56,10 @@ These tests change AWDL and require the installed helper. Record actual results 
 
 ## Naming cleanup
 
-Internal control and extension names now use `AWDLToggle`. Legacy utility migration and rollback handling were removed; fresh installations default to On, and upgrades preserve the saved setting. The live results above precede this cleanup; the renamed extension still needs an installed upgrade check.
+Internal control and extension names now use `AWDLToggle`. Legacy utility migration and rollback handling were removed; fresh installations default to On, and upgrades preserve the saved setting. The live results above precede this cleanup; the installed upgrade check is recorded below.
+
+## Extension launch recovery (2026-09-15)
+
+The renamed extension was registered correctly, but launchd retained its former executable path inside the existing widget host. Logs showed a conflicting extension path followed by a missing-executable spawn failure. Restarting the current user’s `chronod` cleared that entry, and the installed extension launched successfully.
+
+Verified live after recovery: Control Center On changed helper policy and interface state to On; window Refresh showed On; window Off changed both helper state and Control Center to Off. Final helper status: enabled false, interfaceUp false, monitoring true. Automatic updates of an already-open window remain separate from this launch failure.
