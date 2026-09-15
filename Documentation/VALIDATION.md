@@ -52,7 +52,8 @@ These tests change AWDL and require the installed helper. Record actual results 
 - Final package upgrade: installed binary and bundled repair package match the final packaged artifacts; signatures verified.
 - Final native-control On action with the setup app quit: passed. Off was restored and confirmed through the signed app's CLI after the screenshot tool timed out.
 - Upgrade edge case fixed and checked: the old extension worker is retired before reloading the control with the current signature.
-- macOS 26 runtime, logout, sleep/wake, and reboot: not yet tested.
+- Logout, sleep/wake, and reboot: passed in user testing, reported after the v1.0.0 release.
+- macOS 26 runtime: not yet tested.
 
 ## Naming cleanup
 

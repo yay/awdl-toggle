@@ -101,6 +101,6 @@ The local installer writes the final app and extension's code-signature hashes t
 
 ## Verification and provenance
 
-See [validation notes](Documentation/VALIDATION.md) for tested behavior and outstanding live checks.
+Logout, sleep/wake, and reboot checks passed in maintainer testing. See [validation notes](Documentation/VALIDATION.md) for tested behavior and outstanding live checks.
 
 The event-driven monitoring implementation is adapted from [James Howard’s AWDLControl](https://github.com/james-howard/AWDLControl) revision `e54f7922ee5eebb3729e8ad76fd0440a3b3650d9`, under the [MIT license](LICENSE.txt).
