@@ -63,3 +63,9 @@ Internal control and extension names now use `AWDLToggle`. Legacy utility migrat
 The renamed extension was registered correctly, but launchd retained its former executable path inside the existing widget host. Logs showed a conflicting extension path followed by a missing-executable spawn failure. Restarting the current user’s `chronod` cleared that entry, and the installed extension launched successfully.
 
 Verified live after recovery: Control Center On changed helper policy and interface state to On; window Refresh showed On; window Off changed both helper state and Control Center to Off. Final helper status: enabled false, interfaceUp false, monitoring true. Automatic updates of an already-open window remain separate from this launch failure.
+
+## Automatic window updates
+
+The setup window subscribes to authenticated XPC status callbacks and no longer has a Refresh button. The helper sends an initial snapshot and changed status after policy writes or route events. Observation disconnects clear the displayed state and trigger reconnect attempts with a delay capped at eight seconds. Closing the window cancels observation without changing policy.
+
+Universal build and automated checks passed, including an external client changing state, callback delivery, connection invalidation, and a fresh snapshot on resubscription. These tests use an anonymous XPC service; live installed synchronization and helper restart checks for this build remain pending installation.

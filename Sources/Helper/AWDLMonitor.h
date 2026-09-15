@@ -15,6 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, readonly) BOOL enabled;
 @property(nonatomic, readonly) BOOL monitoring;
 @property(nonatomic, copy, nullable) void (^failureHandler)(void);
+@property(nonatomic, copy, nullable) void (^changeHandler)(void);
 - (nullable instancetype)initWithQueue:(dispatch_queue_t)queue
                            statePath:(NSString *)path
                            interface:(id<AWDLInterface>)interface

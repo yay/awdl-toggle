@@ -56,12 +56,25 @@ final class StatusModel: ObservableObject {
     @Published var error: String?
     @Published var busy = false
 
-    func refresh() async {
-        guard !busy else { return }
-        busy = true
-        defer { busy = false }
-        do { status = try await HelperClient.status(); error = nil }
-        catch { status = nil; self.error = error.localizedDescription }
+    func observe() async {
+        var retrySeconds: UInt64 = 1
+        while !Task.isCancelled {
+            do {
+                for try await update in HelperObservation.stream() {
+                    guard !Task.isCancelled else { return }
+                    status = update
+                    error = update.issue
+                    retrySeconds = 1
+                }
+            } catch {
+                guard !Task.isCancelled else { return }
+                status = nil
+                self.error = "Cannot reach the AWDL helper. Reconnecting automatically…"
+            }
+            do { try await Task.sleep(nanoseconds: retrySeconds * 1_000_000_000) }
+            catch { return }
+            retrySeconds = min(retrySeconds * 2, 8)
+        }
     }
 
     func setEnabled(_ enabled: Bool) async {
@@ -69,11 +82,11 @@ final class StatusModel: ObservableObject {
         busy = true
         defer { busy = false }
         do {
-            status = try await HelperClient.setEnabled(enabled)
-            error = status?.issue
+            let result = try await HelperClient.setEnabled(enabled)
+            error = result.issue
         } catch {
             self.error = error.localizedDescription
-            status = try? await HelperClient.status()
+            // The ordered observation stream remains the source of displayed state.
         }
         ControlCenter.shared.reloadControls(ofKind: "local.vitaly.AWDLToggle.Control")
     }
@@ -81,7 +94,6 @@ final class StatusModel: ObservableObject {
 
 struct StatusView: View {
     @StateObject private var model = StatusModel()
-    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
@@ -121,7 +133,6 @@ struct StatusView: View {
             }.font(.callout)
             Divider()
             HStack {
-                Button("Refresh") { Task { await model.refresh() } }.disabled(model.busy)
                 Spacer()
                 Button("Repair…") { openResource("AWDL-Toggle-Repair", extension: "pkg") }
                 Button("Uninstall…") { openResource("AWDL-Toggle-Uninstall", extension: "pkg") }
@@ -130,10 +141,7 @@ struct StatusView: View {
                 .font(.caption).foregroundStyle(.secondary)
         }
         .padding(28).frame(width: 460)
-        .task { await model.refresh() }
-        .onChange(of: scenePhase) { _, phase in
-            if phase == .active { Task { await model.refresh() } }
-        }
+        .task { await model.observe() }
     }
 
     private func openResource(_ name: String, extension suffix: String) {

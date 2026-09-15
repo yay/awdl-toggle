@@ -155,7 +155,10 @@ BOOL AWDLRouteMessagesNeedReconcile(const void *bytes, size_t length) {
         if (self.failureHandler) { self.failureHandler(); }
         return;
     }
-    if (relevant) { [self reconcile]; }
+    if (relevant) {
+        [self reconcile];
+        if (self.changeHandler) { self.changeHandler(); }
+    }
 }
 
 - (void)reconcile {

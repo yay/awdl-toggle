@@ -41,7 +41,7 @@ Fresh installations default to On. Upgrades and repairs preserve AWDL Toggle's s
 
 ## Status, repair, and uninstall
 
-Open **AWDL Toggle** from Applications to see the selected policy, helper status, and any enforcement error. A control read fails instead of inventing an On/Off value when the helper or interface is unavailable.
+Open **AWDL Toggle** from Applications to see the selected policy, helper status, and any enforcement error. The window updates automatically when another control changes AWDL and reconnects automatically if the helper restarts. A control read fails instead of inventing an On/Off value when the helper or interface is unavailable.
 
 - **Repair…** opens the bundled repair installer. It reinstalls the helper and refreshes the allowed client signatures while preserving the setting.
 - **Uninstall…** opens the bundled uninstaller. It unloads the helper, restores AWDL, and removes the custom app, helper, state, and launchd plist.
@@ -55,13 +55,13 @@ After rebuilding, reinstall the **full** installer. The privileged helper delibe
 
 ### Control stays out of sync after an upgrade
 
-If the native control changes appearance but the window's **Refresh** and CLI still show the old setting, the widget extension may have failed to launch. After an extension filename change, macOS can retain its previous executable path in the widget host. Restarting that host clears the stale entry:
+If the native control changes appearance but the window and CLI still show the old setting, the widget extension may have failed to launch. After an extension filename change, macOS can retain its previous executable path in the widget host. Restarting that host clears the stale entry:
 
 ```sh
 pkill -u "$(id -u)" -x chronod
 ```
 
-macOS automatically relaunches the host; other widgets may briefly reload too. Reopen Control Center and verify a toggle against the window's **Refresh** or CLI status. The open window currently refreshes on activation or manually; it does not subscribe to changes from other controls.
+macOS automatically relaunches the host; other widgets may briefly reload too. Reopen Control Center and verify a toggle against the window or CLI status.
 
 ### Command-line diagnostics
 

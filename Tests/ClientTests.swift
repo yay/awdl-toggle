@@ -4,13 +4,28 @@ final class FakeService: NSObject, AWDLHelperProtocol, NSXPCListenerDelegate {
     var enabled = true
     var replyEnabled = true
     var reject = false
+    var observers: [NSXPCConnection] = []
     let queue = DispatchQueue(label: "fake-service")
     func listener(_ listener: NSXPCListener, shouldAcceptNewConnection connection: NSXPCConnection) -> Bool {
         if reject { return false }
         connection.exportedInterface = NSXPCInterface(with: AWDLHelperProtocol.self)
         connection.exportedObject = self
+        connection.remoteObjectInterface = NSXPCInterface(with: AWDLStatusObserver.self)
         connection.resume()
         return true
+    }
+    func observeStatus() {
+        let connection = NSXPCConnection.current()!
+        queue.async {
+            self.observers.append(connection)
+            self.publish()
+        }
+    }
+    func publish() {
+        for connection in observers {
+            (connection.remoteObjectProxy as? AWDLStatusObserver)?.statusDidChange(
+                ["enabled": enabled, "monitoring": true, "interfaceUp": enabled])
+        }
     }
     func getStatusWithReply(_ reply: @escaping ([String: Any]?, Error?) -> Void) {
         queue.async {
@@ -22,6 +37,7 @@ final class FakeService: NSObject, AWDLHelperProtocol, NSXPCListenerDelegate {
         queue.async {
             guard self.replyEnabled else { return }
             self.enabled = enabled
+            self.publish()
             reply(["enabled": self.enabled, "monitoring": true, "interfaceUp": self.enabled], nil)
         }
     }
@@ -52,6 +68,22 @@ enum ClientTests {
         }
         let final = try await request()
         precondition(!final.enabled)
+        let stream = HelperObservation.stream(connection: NSXPCConnection(listenerEndpoint: listener.endpoint))
+        var updates = stream.makeAsyncIterator()
+        let snapshot = try await updates.next()
+        precondition(snapshot?.enabled == false)
+        _ = try await request(true)
+        let pushed = try await updates.next()
+        precondition(pushed?.enabled == true, "Another connection must push its change to the observer")
+        service.queue.sync { service.observers.forEach { $0.invalidate() }; service.observers.removeAll() }
+        do {
+            _ = try await updates.next()
+            fatalError("Lost observation must report an error for reconnect")
+        } catch { }
+        var reconnected = HelperObservation.stream(connection: NSXPCConnection(listenerEndpoint: listener.endpoint)).makeAsyncIterator()
+        let recovered = try await reconnected.next()
+        precondition(recovered?.enabled == true, "Reconnection must send the current snapshot")
+        print("PASS: live observation, external change delivery, disconnect detection, and resubscription")
         service.queue.sync { service.replyEnabled = false }
         do {
             _ = try await request(timeout: 0.05)

@@ -11,9 +11,27 @@
 @property AWDLMonitor *monitor;
 @property dispatch_queue_t queue;
 @property NSXPCListener *listener;
+@property NSHashTable<NSXPCConnection *> *observers;
+@property NSDictionary *lastPublishedStatus;
 @end
 
 @implementation AWDLService
+- (void)publishStatus {
+    NSDictionary *status = [self.monitor status];
+    if ([status isEqual:self.lastPublishedStatus]) { return; }
+    self.lastPublishedStatus = status;
+    for (NSXPCConnection *connection in self.observers) {
+        [(id<AWDLStatusObserver>)connection.remoteObjectProxy statusDidChange:status];
+    }
+}
+- (void)observeStatus {
+    NSXPCConnection *connection = NSXPCConnection.currentConnection;
+    if (!connection) { return; }
+    dispatch_async(self.queue, ^{
+        [self.observers addObject:connection];
+        [(id<AWDLStatusObserver>)connection.remoteObjectProxy statusDidChange:[self.monitor status]];
+    });
+}
 - (void)getStatusWithReply:(void (^)(NSDictionary<NSString *, id> * _Nullable, NSError * _Nullable))reply {
     dispatch_async(self.queue, ^{ reply([self.monitor status], nil); });
 }
@@ -21,12 +39,20 @@
     dispatch_async(self.queue, ^{
         NSError *error = nil;
         [self.monitor setEnabled:enabled error:&error];
+        [self publishStatus];
         reply([self.monitor status], error);
     });
 }
 - (BOOL)listener:(NSXPCListener *)listener shouldAcceptNewConnection:(NSXPCConnection *)connection {
     connection.exportedInterface = [NSXPCInterface interfaceWithProtocol:@protocol(AWDLHelperProtocol)];
     connection.exportedObject = self;
+    connection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(AWDLStatusObserver)];
+    __weak AWDLService *weakSelf = self;
+    __weak NSXPCConnection *weakConnection = connection;
+    connection.invalidationHandler = ^{
+        AWDLService *service = weakSelf;
+        if (service) { dispatch_async(service.queue, ^{ [service.observers removeObject:weakConnection]; }); }
+    };
     // No teardown on disconnect: widgets are ephemeral, the manual policy is not.
     [connection resume];
     return YES;
@@ -81,6 +107,7 @@ int main(int argc, const char *argv[]) {
 
         AWDLService *service = [AWDLService new];
         service.queue = dispatch_queue_create("local.vitaly.AWDLToggle.monitor", DISPATCH_QUEUE_SERIAL);
+        service.observers = [NSHashTable weakObjectsHashTable];
         __block NSError *error = nil;
         dispatch_sync(service.queue, ^{
             service.monitor = [[AWDLMonitor alloc] initWithQueue:service.queue
@@ -89,6 +116,8 @@ int main(int argc, const char *argv[]) {
         });
         if (!service.monitor) { os_log_fault(OS_LOG_DEFAULT, "Cannot start AWDL monitor: %{public}@", error); return 78; }
         service.monitor.failureHandler = ^{ exit(1); }; // launchd reopens the route socket and restores policy.
+        __weak AWDLService *weakService = service;
+        service.monitor.changeHandler = ^{ [weakService publishStatus]; };
         service.listener = [[NSXPCListener alloc] initWithMachServiceName:AWDL_MACH_SERVICE];
         [service.listener setConnectionCodeSigningRequirement:requirement];
         service.listener.delegate = service;
