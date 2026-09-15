@@ -1,0 +1,9 @@
+#!/bin/bash
+set -euo pipefail
+if [[ "${3:-/}" != / ]]; then
+  echo 'AWDL Toggle can only be installed on the running startup volume.' >&2
+  exit 1
+fi
+# Do not overwrite a running executable. launchd reloads it after installation.
+/bin/launchctl bootout system/local.vitaly.AWDLToggle.Helper 2>/dev/null || true
+exit 0

@@ -1,0 +1,107 @@
+#!/bin/bash
+set -euo pipefail
+export PATH=/usr/bin:/bin:/usr/sbin:/sbin
+app='/Applications/AWDL Toggle.app'
+helper='/Library/PrivilegedHelperTools/local.vitaly.AWDLToggle.Helper'
+state='/Library/Application Support/AWDL Toggle'
+plist='/Library/LaunchDaemons/local.vitaly.AWDLToggle.Helper.plist'
+
+[[ "${3:-/}" == / ]] || exit 1
+umask 077
+[[ -d "$app" && ! -L "$app" ]] || { echo 'Install AWDL Toggle before running Repair.' >&2; exit 1; }
+[[ ! -L "$state" ]] || { echo 'Refusing a symlink at the state directory.' >&2; exit 1; }
+if [[ -e "$state" && ! -d "$state" ]]; then exit 1; fi
+if [[ -d "$state" ]]; then
+  owner=$(/usr/bin/stat -f %u "$state")
+  permissions=$(/usr/bin/stat -f %Lp "$state")
+  if [[ "$owner" != 0 ]] || (( (8#$permissions & 0022) != 0 )); then
+    echo 'Refusing an existing state directory that is not protected and root-owned.' >&2
+    exit 1
+  fi
+fi
+/bin/mkdir -p "$state"
+/usr/sbin/chown root:wheel "$state" "$helper" "$plist"
+/bin/chmod 700 "$state"
+/bin/chmod 755 "$helper"
+/bin/chmod 644 "$plist"
+
+# Only the administrator-approved package can update this allowlist. Pin every
+# architecture's CodeDirectory hash, not a spoofable bundle ID or process name.
+/usr/bin/codesign --verify --deep --strict "$app"
+temporary=$(/usr/bin/mktemp "$state/clients.XXXXXX")
+trap '/bin/rm -f "$temporary"' EXIT
+/usr/bin/plutil -create xml1 "$temporary"
+for entry in app control; do
+  if [[ "$entry" == app ]]; then
+    identifier='local.vitaly.AWDLToggle'
+    bundle="$app"
+    executable="$app/Contents/MacOS/AWDL Toggle"
+  else
+    identifier='local.vitaly.AWDLToggle.Control'
+    bundle="$app/Contents/PlugIns/AWDLControlExtension.appex"
+    executable="$bundle/Contents/MacOS/AWDLControlExtension"
+  fi
+  /usr/libexec/PlistBuddy -c "Add :$identifier array" "$temporary"
+  index=0
+  for architecture in $(/usr/bin/lipo -archs "$executable"); do
+    hash=$(/usr/bin/codesign -d --arch "$architecture" --verbose=4 "$bundle" 2>&1 | /usr/bin/awk -F= '$1 == "CDHash" {print $2}')
+    [[ "$hash" =~ ^[0-9a-f]{40}$ ]] || { echo 'Invalid client code signature.' >&2; exit 1; }
+    /usr/libexec/PlistBuddy -c "Add :$identifier:$index string $hash" "$temporary"
+    index=$((index + 1))
+  done
+  [[ $index -gt 0 ]] || exit 1
+done
+/usr/sbin/chown root:wheel "$temporary"
+/bin/chmod 600 "$temporary"
+/bin/mv -f "$temporary" "$state/clients.plist"
+
+# Import an existing explicit manual Off setting only on first installation.
+# Game Mode, unset, and manual On all map to the fresh-install default: On.
+console_user=$(/usr/bin/stat -f %Su /dev/console)
+initial_enabled=true
+if [[ "$console_user" != root && "$console_user" != loginwindow ]]; then
+  legacy_mode=$(/usr/bin/sudo -H -u "$console_user" /usr/bin/defaults read com.jh.AWDLControl AWDLMode 2>/dev/null || true)
+  if [[ "$legacy_mode" == 2 ]]; then initial_enabled=false; fi
+fi
+if [[ -e "$state/state.plist" ]] && [[ "$(/usr/bin/plutil -type enabled "$state/state.plist" 2>/dev/null || true)" != bool ]]; then
+  /bin/mv "$state/state.plist" "$state/state.invalid.$(/bin/date +%s).plist"
+  initial_enabled=true
+fi
+if [[ ! -e "$state/state.plist" ]]; then
+  /usr/bin/plutil -create xml1 "$state/state.plist"
+  /usr/libexec/PlistBuddy -c "Add :enabled bool $initial_enabled" "$state/state.plist"
+  /bin/chmod 600 "$state/state.plist"
+fi
+
+# The upstream helper must not fight the manual policy. Record its previous
+# launchd override so the uninstaller can put that override back.
+legacy='com.jh.AWDLControl.Helper'
+if /bin/launchctl print "system/$legacy" >/dev/null 2>&1 || [[ -d /Applications/AWDLControl.app ]]; then
+  if [[ ! -e "$state/legacy-was-disabled" ]]; then
+    if /bin/launchctl print-disabled system | /usr/bin/grep -F '"com.jh.AWDLControl.Helper" => disabled' >/dev/null; then
+      /usr/bin/touch "$state/legacy-was-disabled"
+    else
+      /usr/bin/touch "$state/legacy-was-enabled"
+    fi
+  fi
+  /bin/launchctl disable "system/$legacy"
+  /bin/launchctl bootout "system/$legacy" 2>/dev/null || true
+fi
+if [[ "$console_user" != root && "$console_user" != loginwindow ]]; then
+  # Quit only the original UI process; keep its app and preferences for rollback.
+  /usr/bin/pkill -u "$console_user" -x AWDLControl || true
+fi
+/bin/launchctl enable system/local.vitaly.AWDLToggle.Helper
+/bin/launchctl bootstrap system "$plist"
+
+# An app extension can outlive a package upgrade. Retire only this app's old
+# worker, whose previous code signature is no longer in the client allowlist.
+/usr/bin/pkill -f '^/Applications/AWDL Toggle[.]app/Contents/PlugIns/AWDLControlExtension[.]appex/Contents/MacOS/AWDLControlExtension([[:space:]]|$)' || true
+if [[ "$console_user" != root && "$console_user" != loginwindow ]]; then
+  console_uid=$(/usr/bin/id -u "$console_user")
+  /bin/launchctl asuser "$console_uid" /usr/bin/sudo -H -u "$console_user" /usr/bin/pluginkit -a "$app/Contents/PlugIns/AWDLControlExtension.appex"
+  saved=$(/usr/libexec/PlistBuddy -c 'Print :enabled' "$state/state.plist")
+  if [[ "$saved" == true ]]; then mode=--on; else mode=--off; fi
+  /bin/launchctl asuser "$console_uid" /usr/bin/sudo -H -u "$console_user" "$app/Contents/MacOS/AWDL Toggle" "$mode"
+fi
+exit 0

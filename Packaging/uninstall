@@ -1,0 +1,16 @@
+#!/bin/bash
+set -euo pipefail
+export PATH=/usr/bin:/bin:/usr/sbin:/sbin
+[[ "${3:-/}" == / ]] || exit 1
+state='/Library/Application Support/AWDL Toggle'
+helper='/Library/PrivilegedHelperTools/local.vitaly.AWDLToggle.Helper'
+/bin/launchctl bootout system/local.vitaly.AWDLToggle.Helper 2>/dev/null || true
+if [[ -x "$helper" && ! -L "$helper" ]]; then "$helper" --restore; fi
+if [[ -f "$state/legacy-was-enabled" && ! -L "$state" ]]; then
+  /bin/launchctl enable system/com.jh.AWDLControl.Helper
+fi
+/bin/rm -f /Library/LaunchDaemons/local.vitaly.AWDLToggle.Helper.plist "$helper"
+/bin/rm -rf "$state" '/Applications/AWDL Toggle.app'
+/usr/sbin/pkgutil --forget local.vitaly.AWDLToggle.Installer >/dev/null 2>&1 || true
+/usr/sbin/pkgutil --forget local.vitaly.AWDLToggle.Repair >/dev/null 2>&1 || true
+exit 0
