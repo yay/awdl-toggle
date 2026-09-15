@@ -127,7 +127,7 @@ entries = "".join(f'<BuildActionEntry buildForTesting="YES" buildForRunning="YES
 
 base = {"CFBundleDevelopmentRegion": "en", "CFBundleExecutable": "$(EXECUTABLE_NAME)",
         "CFBundleIdentifier": "$(PRODUCT_BUNDLE_IDENTIFIER)", "CFBundleInfoDictionaryVersion": "6.0",
-        "CFBundleName": "$(PRODUCT_NAME)", "CFBundleShortVersionString": "1.0.0", "CFBundleVersion": "1",
+        "CFBundleName": "$(PRODUCT_NAME)", "CFBundleShortVersionString": "1.0.1", "CFBundleVersion": "2",
         "LSMinimumSystemVersion": "$(MACOSX_DEPLOYMENT_TARGET)"}
 configs = {
     "App-Info.plist": dict(base, CFBundlePackageType="APPL", CFBundleDisplayName="AWDL Toggle", CFBundleIconFile="AppIcon", NSPrincipalClass="NSApplication"),

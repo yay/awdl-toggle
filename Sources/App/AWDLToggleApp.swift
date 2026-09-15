@@ -135,17 +135,25 @@ struct StatusView: View {
                 Text("To add it to the menu bar, drag AWDL from the controls gallery to the menu bar while editing.")
                     .fixedSize(horizontal: false, vertical: true)
                 Text("On allows AWDL. Off keeps it down. Your choice stays active when this app is closed and after restarting your Mac.")
+                    .fixedSize(horizontal: false, vertical: true)
                 Text("AirDrop and features that rely on AWDL may be unavailable while it is off.")
                     .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }.font(.callout)
             Divider()
             HStack {
+                if let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String {
+                    Text("Version \(version)")
+                        .font(.caption).foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                }
                 Spacer()
                 Button("Repair…") { openResource("AWDL-Toggle-Repair", extension: "pkg") }
                 Button("Uninstall…") { openResource("AWDL-Toggle-Uninstall", extension: "pkg") }
             }
             Text("Repair and uninstall open macOS Installer and require administrator approval. Uninstall restores AWDL before removing the helper.")
                 .font(.caption).foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(28).frame(width: 460)
         .task { await model.observe() }

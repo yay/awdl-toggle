@@ -41,6 +41,8 @@ def helper_payload(directory):
 def main():
     if not (PRODUCTS / "AWDL Toggle.app").is_dir():
         raise SystemExit("Run Scripts/build.sh first.")
+    app_info = plistlib.loads((PRODUCTS / "AWDL Toggle.app/Contents/Info.plist").read_bytes())
+    version = app_info["CFBundleShortVersionString"]
     if STAGING.exists():
         shutil.rmtree(STAGING)
     STAGING.mkdir(parents=True)
@@ -52,10 +54,10 @@ def main():
     repair = STAGING / "AWDL-Toggle-Repair.pkg"
     uninstall = DIST / "AWDL-Toggle-Uninstall.pkg"
     run("pkgbuild", "--root", repair_root, "--scripts", install_scripts,
-        "--identifier", "local.vitaly.AWDLToggle.Repair", "--version", "1.0.0", "--ownership", "recommended", repair)
+        "--identifier", "local.vitaly.AWDLToggle.Repair", "--version", version, "--ownership", "recommended", repair)
     uninstall_component = STAGING / "uninstall-component.pkg"
     run("pkgbuild", "--nopayload", "--scripts", uninstall_scripts,
-        "--identifier", "local.vitaly.AWDLToggle.Uninstall", "--version", "1.0.0", uninstall_component)
+        "--identifier", "local.vitaly.AWDLToggle.Uninstall", "--version", version, uninstall_component)
     distribution = STAGING / "uninstall-distribution.xml"
     run("productbuild", "--synthesize", "--package", uninstall_component, distribution)
     tree = ET.parse(distribution)
@@ -94,7 +96,7 @@ def main():
     components.write_bytes(plistlib.dumps(entries))
     package = DIST / "AWDL-Toggle.pkg"
     run("pkgbuild", "--root", install_root, "--scripts", install_scripts, "--component-plist", components,
-        "--identifier", "local.vitaly.AWDLToggle.Installer", "--version", "1.0.0", "--ownership", "recommended", package)
+        "--identifier", "local.vitaly.AWDLToggle.Installer", "--version", version, "--ownership", "recommended", package)
     shutil.copy2(repair, DIST / repair.name)
     for path in sorted(DIST.glob("*.pkg")):
         print(f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}")
