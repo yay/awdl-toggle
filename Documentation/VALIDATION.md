@@ -69,3 +69,11 @@ Verified live after recovery: Control Center On changed helper policy and interf
 The setup window subscribes to authenticated XPC status callbacks and no longer has a Refresh button. The helper sends an initial snapshot and changed status after policy writes or route events. Observation disconnects clear the displayed state and trigger reconnect attempts with a delay capped at eight seconds. Closing the window cancels observation without changing policy.
 
 Universal build and automated checks passed, including an external client changing state, callback delivery, connection invalidation, and a fresh snapshot on resubscription. These tests use an anonymous XPC service; live installed synchronization and helper restart checks for this build remain pending installation.
+
+## Uninstall and native placements (2026-09-15)
+
+After the previous uninstaller ran, the app, helper executable, LaunchDaemon, and extension registration were absent, and `awdl0` was up. The extension process was still alive. Stopping that worker and restarting the signed-in user’s `chronod` and `ControlCenter` removed its interactive cached state; macOS retained a disabled placement. Removing that placement through Control Center’s context menu removed the slot.
+
+The updated uninstaller unregisters the app and extension before removing their files, terminates their processes, and reloads the signed-in user’s hosts. It preserves system control preferences; its introduction asks users to remove AWDL placements first and its conclusion explains any remaining disabled slot. The introduction was checked in macOS Installer. Extraction checks verify the bundled uninstaller script and its presentation resources. Full install/uninstall testing of this revision remains pending administrator authentication.
+
+The control’s WidgetKit configuration was unchanged by the live-sync update. The missing “Copy to Menu Bar” command was observed for the leftover control after uninstall; its availability with the app installed still needs a live check. The app and README now explain Apple’s supported Edit Controls → drag-to-menu-bar method.

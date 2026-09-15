@@ -3,11 +3,35 @@ set -euo pipefail
 export PATH=/usr/bin:/bin:/usr/sbin:/sbin
 [[ "${3:-/}" == / ]] || exit 1
 state='/Library/Application Support/AWDL Toggle'
+app='/Applications/AWDL Toggle.app'
 helper='/Library/PrivilegedHelperTools/local.vitaly.AWDLToggle.Helper'
+console_user=$(/usr/bin/stat -f %Su /dev/console)
+if [[ "$console_user" != root && "$console_user" != loginwindow ]]; then
+  console_uid=$(/usr/bin/id -u "$console_user")
+  as_user() { /bin/launchctl asuser "$console_uid" /usr/bin/sudo -H -u "$console_user" "$@"; }
+  # Unregister while the bundles still exist, before removing their files.
+  if [[ -d "$app/Contents/PlugIns" ]]; then
+    for extension in "$app"/Contents/PlugIns/*.appex; do
+      [[ -d "$extension" ]] || continue
+      as_user /usr/bin/pluginkit -r "$extension" || true
+    done
+  fi
+  as_user /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -u "$app" || true
+  # A deleted executable can keep running. Stop only this installed app's UI
+  # and workers so none survive with a missing helper or cached control value.
+  /usr/bin/pkill -u "$console_uid" -f '^/Applications/AWDL Toggle[.]app/Contents/MacOS/AWDL Toggle([[:space:]]|$)' || true
+  /usr/bin/pkill -u "$console_uid" -f '^/Applications/AWDL Toggle[.]app/Contents/PlugIns/[^/]+[.]appex/Contents/MacOS/[^/[:space:]]+([[:space:]]|$)' || true
+fi
 /bin/launchctl bootout system/local.vitaly.AWDLToggle.Helper 2>/dev/null || true
 if [[ -x "$helper" && ! -L "$helper" ]]; then "$helper" --restore; fi
 /bin/rm -f /Library/LaunchDaemons/local.vitaly.AWDLToggle.Helper.plist "$helper"
 /bin/rm -rf "$state" '/Applications/AWDL Toggle.app'
+if [[ -n "${console_uid:-}" ]]; then
+  # These per-user hosts retain extension launch paths and rendered controls.
+  # Let launchd restart them after removal; preserve all control preferences.
+  /usr/bin/pkill -u "$console_uid" -x chronod || true
+  /usr/bin/pkill -u "$console_uid" -x ControlCenter || true
+fi
 /usr/sbin/pkgutil --forget local.vitaly.AWDLToggle.Installer >/dev/null 2>&1 || true
 /usr/sbin/pkgutil --forget local.vitaly.AWDLToggle.Repair >/dev/null 2>&1 || true
 exit 0

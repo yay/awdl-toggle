@@ -9,6 +9,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -33,6 +34,17 @@ def main():
         for filename in ("AWDL-Toggle-Repair.pkg", "AWDL-Toggle-Uninstall.pkg"):
             assert (app / "Contents/Resources" / filename).is_file()
 
+        removal = Path(temporary) / "uninstaller"
+        run("pkgutil", "--expand-full", app / "Contents/Resources/AWDL-Toggle-Uninstall.pkg", removal)
+        distribution = ET.parse(removal / "Distribution").getroot()
+        assert distribution.findtext("title") == "Uninstall AWDL Toggle"
+        for element in ("welcome", "conclusion"):
+            resource = distribution.find(element).attrib["file"]
+            assert (removal / "Resources" / resource).is_file()
+        removal_scripts = list(removal.rglob("postinstall"))
+        assert len(removal_scripts) == 1
+        assert removal_scripts[0].read_bytes() == (ROOT / "Packaging/uninstall").read_bytes()
+
         clauses = []
         for bundle, identifier in [(app, "local.vitaly.AWDLToggle"), (extension, "local.vitaly.AWDLToggle.Control")]:
             info = plistlib.loads((bundle / "Contents/Info.plist").read_bytes())
@@ -54,7 +66,7 @@ def main():
         (modified / "Contents/Resources/tampered.txt").write_text("Different build, same bundle identifier")
         run("codesign", "--force", "--sign", "-", "--options", "runtime", "--timestamp=none", modified)
         assert run("codesign", "--verify", "--strict", "-R", "=" + requirement, modified, check=False).returncode != 0
-        print("PASS: extracted package signatures, universal binaries, App Intents metadata, embedded maintenance packages, and rejection of a modified client")
+        print("PASS: extracted package signatures, universal binaries, App Intents metadata, embedded maintenance packages and uninstaller instructions, and rejection of a modified client")
 
 
 if __name__ == "__main__":

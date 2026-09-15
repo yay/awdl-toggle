@@ -35,6 +35,8 @@ Complete macOS Installer's administrator authentication. The package installs **
 
 Then open **Control Center → Edit Controls**, search for **AWDL**, add the control, and select its small circular size. macOS owns the control's Liquid Glass appearance, sizing, placement, and refresh lifecycle.
 
+To put AWDL in the menu bar, use **Edit Controls** and drag it from the controls gallery to the menu bar. This works without a “Copy to Menu Bar” context-menu command. See [Apple’s menu bar instructions](https://support.apple.com/guide/mac-help/mchl4af84660/mac).
+
 You can close the setup app. The helper, rather than the app or widget process, maintains the setting.
 
 Fresh installations default to On. Upgrades and repairs preserve AWDL Toggle's saved setting. Disable any other AWDL-management utility before using this app.
@@ -44,7 +46,8 @@ Fresh installations default to On. Upgrades and repairs preserve AWDL Toggle's s
 Open **AWDL Toggle** from Applications to see the selected policy, helper status, and any enforcement error. The window updates automatically when another control changes AWDL and reconnects automatically if the helper restarts. A control read fails instead of inventing an On/Off value when the helper or interface is unavailable.
 
 - **Repair…** opens the bundled repair installer. It reinstalls the helper and refreshes the allowed client signatures while preserving the setting.
-- **Uninstall…** opens the bundled uninstaller. It unloads the helper, restores AWDL, and removes the custom app, helper, state, and launchd plist.
+- **Uninstall…** opens the bundled removal package. First remove your AWDL placements using the context menus in Control Center and the menu bar. The package stops the app and its extension, unregisters their bundles, restores AWDL, and removes the app, helper, state, and launchd plist. It then reloads the signed-in user’s widget and Control Center hosts. macOS may retain a disabled placement if you did not remove it first.
+- macOS Installer calls the removal action **Install** and requests administrator authentication. The uninstaller’s introduction and conclusion explain that it removes AWDL Toggle.
 - The same uninstaller is available as `dist/AWDL-Toggle-Uninstall.pkg`.
 
 Use the uninstaller rather than only dragging the app to Trash: this local installation uses a persistent system LaunchDaemon.

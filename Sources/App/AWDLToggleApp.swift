@@ -109,12 +109,16 @@ struct StatusView: View {
             }
             GroupBox {
                 VStack(alignment: .leading, spacing: 10) {
-                    Toggle("AWDL", isOn: Binding(
-                        get: { model.status?.enabled ?? true },
-                        set: { enabled in Task { await model.setEnabled(enabled) } }
-                    ))
-                    .toggleStyle(.switch)
-                    .disabled(model.busy || model.status == nil)
+                    if model.status != nil {
+                        Toggle("AWDL", isOn: Binding(
+                            get: { model.status?.enabled ?? false },
+                            set: { enabled in Task { await model.setEnabled(enabled) } }
+                        ))
+                        .toggleStyle(.switch)
+                        .disabled(model.busy)
+                    } else {
+                        LabeledContent("AWDL", value: "Unavailable")
+                    }
                     Text(model.status?.summary ?? "Helper unavailable")
                         .font(.callout).foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -127,6 +131,9 @@ struct StatusView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Add it to Control Center").font(.headline)
                 Text("Open Control Center → Edit Controls, search for AWDL, and add the small circular control.")
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("To add it to the menu bar, drag AWDL from the controls gallery to the menu bar while editing.")
+                    .fixedSize(horizontal: false, vertical: true)
                 Text("On allows AWDL. Off keeps it down. Your choice stays active when this app is closed and after restarting your Mac.")
                 Text("AirDrop and features that rely on AWDL may be unavailable while it is off.")
                     .foregroundStyle(.secondary)

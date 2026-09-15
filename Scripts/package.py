@@ -8,6 +8,7 @@ import hashlib
 import plistlib
 import shutil
 import subprocess
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -52,8 +53,20 @@ def main():
     uninstall = DIST / "AWDL-Toggle-Uninstall.pkg"
     run("pkgbuild", "--root", repair_root, "--scripts", install_scripts,
         "--identifier", "local.vitaly.AWDLToggle.Repair", "--version", "1.0.0", "--ownership", "recommended", repair)
+    uninstall_component = STAGING / "uninstall-component.pkg"
     run("pkgbuild", "--nopayload", "--scripts", uninstall_scripts,
-        "--identifier", "local.vitaly.AWDLToggle.Uninstall", "--version", "1.0.0", uninstall)
+        "--identifier", "local.vitaly.AWDLToggle.Uninstall", "--version", "1.0.0", uninstall_component)
+    distribution = STAGING / "uninstall-distribution.xml"
+    run("productbuild", "--synthesize", "--package", uninstall_component, distribution)
+    tree = ET.parse(distribution)
+    root = tree.getroot()
+    ET.SubElement(root, "title").text = "Uninstall AWDL Toggle"
+    ET.SubElement(root, "welcome", file="Welcome.html", **{"mime-type": "text/html"})
+    ET.SubElement(root, "conclusion", file="Conclusion.html", **{"mime-type": "text/html"})
+    ET.SubElement(root, "domains", enable_anywhere="false", enable_currentUserHome="false", enable_localSystem="true")
+    tree.write(distribution, encoding="utf-8", xml_declaration=True)
+    run("productbuild", "--distribution", distribution, "--package-path", STAGING,
+        "--resources", ROOT / "Resources/Uninstall", uninstall)
 
     install_root = STAGING / "install-root"
     helper_payload(install_root)
