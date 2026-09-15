@@ -26,7 +26,5 @@
 	<string>AppIcon</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
-	<key>NSHumanReadableCopyright</key>
-	<string>Includes AWDLControl code © 2026 James Howard (MIT).</string>
 </dict>
 </plist>

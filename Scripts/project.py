@@ -81,14 +81,14 @@ shared = ["Sources/Shared/HelperClient.swift"]
 bridging = "Sources/Shared/BridgingHeader.h"
 all_refs, products = [], []
 for args in [
-    ("AWDLControlExtension", shared + ["Sources/Control/AWDLControl.swift"], "local.vitaly.AWDLToggle.Control", "wrapper.app-extension", "AWDLControlExtension.appex", {
+    ("AWDLToggleExtension", shared + ["Sources/Control/AWDLToggle.swift"], "local.vitaly.AWDLToggle.Control", "wrapper.app-extension", "AWDLToggleExtension.appex", {
         "INFOPLIST_FILE": "Config/Control-Info.plist", "CODE_SIGN_ENTITLEMENTS": "Config/Control.entitlements",
         "APPLICATION_EXTENSION_API_ONLY": "YES", "SKIP_INSTALL": "YES", "SWIFT_OBJC_BRIDGING_HEADER": bridging,
         "LD_RUNPATH_SEARCH_PATHS": ["$(inherited)", "@executable_path/../Frameworks", "@executable_path/../../../../Frameworks"],
     }),
     ("AWDL Toggle", shared + ["Sources/App/AWDLToggleApp.swift"], "local.vitaly.AWDLToggle", "wrapper.application", "AWDL Toggle.app", {
         "INFOPLIST_FILE": "Config/App-Info.plist", "SWIFT_OBJC_BRIDGING_HEADER": bridging,
-    }, ["AWDLControlExtension"], ["AWDLControlExtension"], ["Resources/AppIcon.icns"]),
+    }, ["AWDLToggleExtension"], ["AWDLToggleExtension"], ["Resources/AppIcon.icns"]),
     ("AWDLToggleHelper", ["Sources/Helper/AWDLMonitor.m", "Sources/Helper/main.m"], "local.vitaly.AWDLToggle.Helper", "compiled.mach-o.executable", "AWDLToggleHelper", {
         "OTHER_LDFLAGS": ["-framework", "Foundation", "-framework", "Security"],
         "CREATE_INFOPLIST_SECTION_IN_BINARY": "YES", "GENERATE_INFOPLIST_FILE": "YES", "SKIP_INSTALL": "YES",
@@ -110,7 +110,7 @@ add("project", "PBXProject", attributes={"LastUpgradeCheck": "2700"},
         "GCC_WARN_UNDECLARED_SELECTOR": "YES", "GCC_WARN_UNINITIALIZED_AUTOS": "YES_AGGRESSIVE",
     }), compatibilityVersion="Xcode 14.0", developmentRegion="en", hasScannedForEncodings=0,
     knownRegions=["en", "Base"], mainGroup=group, productRefGroup=product_group,
-    projectDirPath="", projectRoot="", targets=[uid(n) for n in ["AWDL Toggle", "AWDLControlExtension", "AWDLToggleHelper"]])
+    projectDirPath="", projectRoot="", targets=[uid(n) for n in ["AWDL Toggle", "AWDLToggleExtension", "AWDLToggleHelper"]])
 project = ROOT / "AWDLToggle.xcodeproj"
 project.mkdir(exist_ok=True)
 (project / "project.pbxproj").write_text("// !$*UTF8*$!\n" + serialize(dict(archiveVersion=1, classes={}, objectVersion=56, objects=objects, rootObject=uid("project"))) + "\n")
@@ -130,7 +130,7 @@ base = {"CFBundleDevelopmentRegion": "en", "CFBundleExecutable": "$(EXECUTABLE_N
         "CFBundleName": "$(PRODUCT_NAME)", "CFBundleShortVersionString": "1.0.0", "CFBundleVersion": "1",
         "LSMinimumSystemVersion": "$(MACOSX_DEPLOYMENT_TARGET)"}
 configs = {
-    "App-Info.plist": dict(base, CFBundlePackageType="APPL", CFBundleDisplayName="AWDL Toggle", CFBundleIconFile="AppIcon", NSPrincipalClass="NSApplication", NSHumanReadableCopyright="Includes AWDLControl code © 2026 James Howard (MIT)."),
+    "App-Info.plist": dict(base, CFBundlePackageType="APPL", CFBundleDisplayName="AWDL Toggle", CFBundleIconFile="AppIcon", NSPrincipalClass="NSApplication"),
     "Control-Info.plist": dict(base, CFBundlePackageType="XPC!", CFBundleDisplayName="AWDL", NSExtension={"NSExtensionPointIdentifier": "com.apple.widgetkit-extension"}),
     "Control.entitlements": {"com.apple.security.app-sandbox": True, "com.apple.security.temporary-exception.mach-lookup.global-name": ["local.vitaly.AWDLToggle.Helper"]},
     "local.vitaly.AWDLToggle.Helper.plist": {"Label": "local.vitaly.AWDLToggle.Helper", "ProgramArguments": ["/Library/PrivilegedHelperTools/local.vitaly.AWDLToggle.Helper"], "MachServices": {"local.vitaly.AWDLToggle.Helper": True}, "RunAtLoad": True, "KeepAlive": True, "ThrottleInterval": 10, "ProcessType": "Background", "AssociatedBundleIdentifiers": ["local.vitaly.AWDLToggle"]},

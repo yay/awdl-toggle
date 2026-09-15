@@ -3,11 +3,11 @@ import SwiftUI
 import WidgetKit
 
 @main
-struct AWDLControls: WidgetBundle {
-    var body: some Widget { AWDLControl() }
+struct AWDLToggleWidgets: WidgetBundle {
+    var body: some Widget { AWDLToggle() }
 }
 
-struct AWDLControl: ControlWidget {
+struct AWDLToggle: ControlWidget {
     static let kind = "local.vitaly.AWDLToggle.Control"
 
     var body: some ControlWidgetConfiguration {

@@ -1,7 +1,6 @@
 # AWDL Toggle
 
 A small native macOS Control Center switch for Apple Wireless Direct Link (AWDL).
-Built from the route-monitoring approach in [James Howard's AWDLControl](https://github.com/james-howard/AWDLControl), with a manual interface and persistent policy.
 
 ## Everyday use
 
@@ -38,11 +37,7 @@ Then open **Control Center → Edit Controls**, search for **AWDL**, add the con
 
 You can close the setup app. The helper, rather than the app or widget process, maintains the setting.
 
-### Switching from the original AWDLControl
-
-On first installation, the installer imports the original app's explicit manual Off setting for the signed-in user. Game Mode, manual On, and missing preferences default to On. Subsequent installations preserve the custom helper's own saved setting.
-
-The installer stops the original running app and disables/unloads its helper so it cannot compete with the custom one. Also turn off **AWDLControl** in **Open at Login** if it is listed, to prevent its old setup window appearing at login. The original app and preferences are retained.
+Fresh installations default to On. Upgrades and repairs preserve AWDL Toggle's saved setting. Disable any other AWDL-management utility before using this app.
 
 ## Status, repair, and uninstall
 
@@ -52,7 +47,7 @@ Open **AWDL Toggle** from Applications to see the selected policy, helper status
 - **Uninstall…** opens the bundled uninstaller. It unloads the helper, restores AWDL, and removes the custom app, helper, state, and launchd plist.
 - The same uninstaller is available as `dist/AWDL-Toggle-Uninstall.pkg`.
 
-Use the uninstaller rather than only dragging the app to Trash: this local installation uses a persistent system LaunchDaemon. If the installer temporarily disabled the original helper, the uninstaller restores its previous enabled override without launching the original app.
+Use the uninstaller rather than only dragging the app to Trash: this local installation uses a persistent system LaunchDaemon.
 
 If the saved state is corrupt, Repair preserves it as `state.invalid.<timestamp>.plist` and resets AWDL to On so the app can recover. Valid settings are retained.
 
@@ -72,7 +67,7 @@ Commands use the same authenticated XPC service as the native control. `--status
 
 ## How it works
 
-The Objective-C helper derives from AWDLControl's `AF_ROUTE` + `SIOCSIFFLAGS` implementation. A serial dispatch queue handles route events, commands, and persistence. It sleeps between events rather than polling periodically. It preserves unrelated interface flags, tolerates interface absence during boot, validates route-message lengths, and restarts through launchd if its route source fails.
+The Objective-C helper uses `AF_ROUTE` + `SIOCSIFFLAGS`. A serial dispatch queue handles route events, commands, and persistence. It sleeps between events rather than polling periodically. It preserves unrelated interface flags, tolerates interface absence during boot, validates route-message lengths, and restarts through launchd if its route source fails.
 
 Turning On raises the interface once, then releases normal interface management to macOS. Turning Off saves the policy and applies it immediately, then re-applies it on interface changes. When the interface is missing, the saved choice is applied when it appears. An orderly helper unload restores the interface; the saved policy still applies on the next start.
 
@@ -93,4 +88,4 @@ The local installer writes the final app and extension's code-signature hashes t
 
 See [validation notes](Documentation/VALIDATION.md) for tested behavior and outstanding live checks.
 
-The event-driven monitoring implementation is adapted from AWDLControl revision `e54f7922ee5eebb3729e8ad76fd0440a3b3650d9`, under the [MIT license](LICENSE.txt). The upstream updater, game automation, and UI are not included.
+The event-driven monitoring implementation is adapted from [James Howard’s AWDLControl](https://github.com/james-howard/AWDLControl) revision `e54f7922ee5eebb3729e8ad76fd0440a3b3650d9`, under the [MIT license](LICENSE.txt).

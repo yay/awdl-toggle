@@ -24,7 +24,7 @@ def main():
         run("pkgutil", "--expand-full", ROOT / "dist/AWDL-Toggle.pkg", expanded)
         payload = expanded / "Payload"
         app = payload / "Applications/AWDL Toggle.app"
-        extension = app / "Contents/PlugIns/AWDLControlExtension.appex"
+        extension = app / "Contents/PlugIns/AWDLToggleExtension.appex"
         helper = payload / "Library/PrivilegedHelperTools/local.vitaly.AWDLToggle.Helper"
         run("codesign", "--verify", "--deep", "--strict", app)
         run("codesign", "--verify", "--strict", helper)

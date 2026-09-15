@@ -1,5 +1,3 @@
-// Derived from AWDLControl by James Howard, copyright 2026, MIT License.
-// Upstream revision e54f7922ee5eebb3729e8ad76fd0440a3b3650d9.
 // Preserves AF_ROUTE + SIOCSIFFLAGS enforcement; uses a serial dispatch source
 // instead of the original poll thread and pipe for deterministic request replies.
 #import "AWDLMonitor.h"

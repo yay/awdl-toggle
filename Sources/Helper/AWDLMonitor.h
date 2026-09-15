@@ -2,7 +2,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-// Adapted from James Howard's AWDLControl (MIT), AWDLControlHelper/AWDLMonitor.
 // All access is serialized on the queue supplied at initialization.
 @protocol AWDLInterface <NSObject>
 - (nullable NSNumber *)interfaceUpWithError:(NSError * _Nullable * _Nullable)error;

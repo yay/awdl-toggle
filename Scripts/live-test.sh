@@ -72,7 +72,4 @@ flags=$(/sbin/ifconfig awdl0 | /usr/bin/head -1)
 echo 'PASS: uninstall restored AWDL and removed custom installed components'
 
 /usr/sbin/installer -pkg "$workspace/dist/AWDL-Toggle.pkg" -target /
-if [[ -d /Applications/AWDLControl.app ]]; then
-  /bin/launchctl print-disabled system | /usr/bin/grep -F '"com.jh.AWDLControl.Helper" => disabled'
-fi
 echo 'PASS: full live acceptance suite; restoring the initial selection'

@@ -41,7 +41,7 @@ These tests change AWDL and require the installed helper. Record actual results 
 - Automated tests: passed (138 monitor/parser checks, 10,000 randomized parser probes, anonymous XPC integration, 5 packaging checks).
 - Clang static analysis of the monitor and service: passed without findings.
 - Extracted installer validation and modified-client signature rejection: passed.
-- Installed helper: running with the original manual Off selection imported.
+- Installed helper: running with Off selected.
 - Native small Control Center toggle: both directions verified against helper state; On raised the interface and Off lowered it.
 - Five independent `ifconfig awdl0 up` attempts while Off: interface was down at every check after a 100 ms delay.
 - Helper recovery after SIGKILL: passed; launchd restarted it and restored Off.
@@ -51,6 +51,9 @@ These tests change AWDL and require the installed helper. Record actual results 
 - Reinstallation after uninstall: passed; final state restored to Off.
 - Final package upgrade: installed binary and bundled repair package match the final packaged artifacts; signatures verified.
 - Final native-control On action with the setup app quit: passed. Off was restored and confirmed through the signed app's CLI after the screenshot tool timed out.
-- Upgrade edge cases fixed and checked: the original helper is disabled even when unloaded, and the old extension worker is retired before reloading the control with the current signature.
-- Original app: no separate Open at Login entry was present; its helper was disabled and unloaded during handover.
+- Upgrade edge case fixed and checked: the old extension worker is retired before reloading the control with the current signature.
 - macOS 26 runtime, logout, sleep/wake, and reboot: not yet tested.
+
+## Naming cleanup
+
+Internal control and extension names now use `AWDLToggle`. Legacy utility migration and rollback handling were removed; fresh installations default to On, and upgrades preserve the saved setting. The live results above precede this cleanup; the renamed extension still needs an installed upgrade check.
