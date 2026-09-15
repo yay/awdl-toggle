@@ -157,6 +157,24 @@
 			);
 			"runOnlyForDeploymentPostprocessing" = 0;
 		};
+		"445AFB9A10CBBAE48539A39F" = {
+			"isa" = "PBXFileReference";
+			"path" = "Resources/AppIcon.icns";
+			"sourceTree" = "<group>";
+			"lastKnownFileType" = "image.icns";
+		};
+		"4D0C0A29010ADA30BF0DF36C" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "445AFB9A10CBBAE48539A39F";
+		};
+		"BDFF2218277CF30E40E17A25" = {
+			"isa" = "PBXResourcesBuildPhase";
+			"buildActionMask" = 2147483647;
+			"files" = (
+				"4D0C0A29010ADA30BF0DF36C",
+			);
+			"runOnlyForDeploymentPostprocessing" = 0;
+		};
 		"44AB707E9FB4A6D3E95ACF19" = {
 			"isa" = "PBXBuildFile";
 			"fileRef" = "22D8BC0B702AACDB35DDE99C";
@@ -262,6 +280,7 @@
 			"buildPhases" = (
 				"4280B55B395373F2C1095A9D",
 				"9DC9F1B88BC0528AB573FEA4",
+				"BDFF2218277CF30E40E17A25",
 				"168CEFD2C0A6E621EFEAF5D9",
 			);
 			"buildRules" = (
@@ -430,6 +449,7 @@
 				"21B22366B8A382EED5F72B7B",
 				"0E369E22781A1CC5D500AB76",
 				"38E597661476067B3CB23A18",
+				"445AFB9A10CBBAE48539A39F",
 				"DE0E1D92C4FA213A688992F8",
 				"FEBCF28A098893026B897829",
 				"68DDF5B9AB6F0AB8CA39AC0B",

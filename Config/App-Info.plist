@@ -22,6 +22,8 @@
 	<string>APPL</string>
 	<key>CFBundleDisplayName</key>
 	<string>AWDL Toggle</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>NSHumanReadableCopyright</key>
