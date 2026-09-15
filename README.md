@@ -2,6 +2,8 @@
 
 A small native macOS Control Center switch for Apple Wireless Direct Link (AWDL).
 
+![AWDL Toggle window, Control Center toggle, and menu bar icon on macOS](Documentation/Images/awdl-toggle-macos.png)
+
 ## Everyday use
 
 - **AWDL On / highlighted:** allow AWDL for AirDrop and Continuity. macOS manages the interface normally.
